@@ -1,39 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
+import './components/SearchComponent';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [systemText, setSystemText] = useState('');
+  const [userMessage, setUserMessage] = useState('');
+  const [output, setOutput] = useState('');
+
+  const handleSystemTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSystemText(e.target.value);
+  };
+
+  const handleUserMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserMessage(e.target.value);
+  };
+
+  const handleSubmit = () => {
+    // Here we need to call the AI model somehow with the usertext and the systemtext
+    setOutput(`AI Response to "${userMessage}" with system text "${systemText}"`);
+  };
 
   return (
-    <>
-      <div className='bg-red-500 text-white p-4'>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1 className='text-3xl font-bold underline' >Vite + React</h1>
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
+    <div className="flex flex-col min-h-screen bg-gray-800 text-white items-center justify-center">
+      
+      <header className="text-center mb-8">
+        <h1 className="text-2xl font-bold">How can I help?</h1>
+      </header>
 
-      <div className="text-white p-4">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <main className="w-full max-w-md p-4">
+        <div className="mb-4">
+          <label className="text-2xl block mb-2">System Text:</label>
+          <input
+            type="text"
+            value={systemText}
+            onChange={handleSystemTextChange}
+            className="bg-neutral-700 w-full p-4 mb-4 text-white rounded border border-gray-300"
+          />
+          <label className="text-2xl block mb-2">User Message:</label>
+          <input
+            type="text"
+            value={userMessage}
+            onChange={handleUserMessageChange}
+            className="bg-neutral-700 w-full p-4 mb-4 text-white rounded border border-gray-300 text-lg"
+          />
+          <button onClick={handleSubmit} className="w-full bg-blue-500 text-white p-2 rounded">
+            Submit
+          </button>
+        </div>
+
+        <div className="text-center">
+          <h2 className="text-2xl mb-2">Output:</h2>
+          <p>{output}</p>
+        </div>
+      </main>
+
+    </div>
+  );
 }
 
-export default App
+export default App;
