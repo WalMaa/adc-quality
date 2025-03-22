@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from pymongo import MongoClient
 from contextlib import asynccontextmanager
+from src.routes.messages import router as messages_router
+from src.routes.llms import router as llms_router
+from src.routes.responses import router as responses_router
 
 
 async def connect_to_mongo(app: FastAPI):
@@ -25,6 +28,11 @@ async def lifespan(app: FastAPI):
 
     
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(messages_router)
+app.include_router(llms_router)
+app.include_router(responses_router)
+
 
 
 @app.get("/")
