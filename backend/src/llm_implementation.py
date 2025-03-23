@@ -17,7 +17,7 @@ prompt = PromptTemplate(
     input_variables=["query", "system_message"],
 )
 
-llm = ChatOllama(model=model_name, temperature=0.2,)
+llm = ChatOllama(model=model_name, base_url="http://host.docker.internal:11434", )
 
 
 def prompt_llm(query, system_message):
