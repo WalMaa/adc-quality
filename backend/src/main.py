@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from pymongo import MongoClient
 from contextlib import asynccontextmanager
+from src.llm_implementation import prompt_llm
+from src.models import PromptRequest
 from src.routes.messages import router as messages_router
 from src.routes.llms import router as llms_router
 from src.routes.responses import router as responses_router
-
 
 async def connect_to_mongo(app: FastAPI):
     try:
@@ -14,6 +15,7 @@ async def connect_to_mongo(app: FastAPI):
         print("Connected to MongoDB")
     except Exception as e:
         print(f"An error occurred while connecting to MongoDB: {e}")
+    
     
     
 async def close_mongo_connection(app: FastAPI):
@@ -38,3 +40,10 @@ app.include_router(responses_router)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+
+@app.post("/prompt")
+async def prompt(prompt: PromptRequest):
+    response = prompt_llm(prompt.system_message, prompt.user_message)
+    print("Response: ", response)
+    return response
