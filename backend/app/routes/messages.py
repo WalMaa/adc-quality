@@ -1,44 +1,30 @@
 from fastapi import APIRouter
 
-from src.models import MessageRequest
-from src.db import get_database
-
 router = APIRouter(prefix="/messages")
 
 # Save a new user message
 @router.post("/user")
-async def save_user_message(req: MessageRequest):
-    db = get_database()
-    user_messages = db.get_collection("user_messages")
-    user_messages.insert_one({"message": req.message})
+async def save_user_message(message: str):
+    # TODO: save user message to db
     return "User message saved"
 
 # Save a new system message
 @router.post("/system")
-async def save_system_message(message: MessageRequest):
+async def save_system_message(message: str):
     # TODO: save system message to db
     return "System message saved"
 
 # List all user messages
 @router.get("/user")
 async def list_user_messages():
-    db = get_database()
-    
-    user_messages = db["user_messages"]
-    items = list(user_messages.find())
-    
-    # Convert MongoDB ObjectIds to strings for JSON serialization
-    for item in items:
-        item["_id"] = str(item["_id"])
-    
-    return items
+    #TODO: get user messages from db
+    return ["User message 1", "User message 2"]
 
 # List all system messages
 @router.get("/system")
 async def list_system_messages():
     #TODO: get system messages from db
     return ["System message 1", "System message 2"]
-
 
 # Retrieve a user message
 @router.get("/user/{message_id}")
