@@ -6,6 +6,7 @@ from src.models import PromptRequest
 from src.routes.messages import router as messages_router
 from src.routes.llms import router as llms_router
 from src.routes.responses import router as responses_router
+from fastapi.middleware.cors import CORSMiddleware
 
 async def connect_to_mongo(app: FastAPI):
     try:
@@ -31,9 +32,18 @@ async def lifespan(app: FastAPI):
     
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(messages_router)
 app.include_router(llms_router)
 app.include_router(responses_router)
+
 
 
 
