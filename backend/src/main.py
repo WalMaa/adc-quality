@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from src.llm_implementation import prompt_llm
@@ -19,7 +20,6 @@ async def lifespan(app: FastAPI):
     # Disconnect from MongoDB
     if hasattr(app, 'mongodb_client') and app.mongodb_client:
         app.mongodb_client.close()
-        print("Closed connection to MongoDB")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -42,5 +42,4 @@ async def root():
 @app.post("/prompt")
 async def prompt(prompt: PromptRequest):
     response = prompt_llm(prompt.system_message, prompt.user_message)
-    print("Response: ", response)
     return response

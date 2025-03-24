@@ -9,17 +9,17 @@ router = APIRouter(prefix="/messages")
 @router.post("/user")
 async def save_user_message(req: MessageRequest):
     db = get_database()
+    print("Connected to DB:", db.name)
     user_messages = db.get_collection("user_messages")
     user_messages.insert_one({"message": req.message})
     return "User message saved"
 
-# Save a new system message
 @router.post("/system")
 async def save_system_message(req: MessageRequest):
     db = get_database()
-    print("DB: ", db)
     system_messages = db.get_collection("system_messages")
-    system_messages.insert_one({"message": req.message})
+    result = system_messages.insert_one({"message": req.message})
+    print(f"Inserted document ID: {result.inserted_id}")
     return "System message saved"
 
 # List all user messages -------
@@ -44,7 +44,6 @@ async def list_system_messages():
     
     for item in items:
         item["_id"] = str(item["_id"])
-    
     return items
 
 
