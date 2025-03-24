@@ -45,44 +45,18 @@ async def prompt(prompt: PromptRequest):
     # Generate the response using the LLM
     response = prompt_llm(prompt.system_message, prompt.user_message)
     
-    # Insert the prompt messages and response into the "responses" collection
-    db = get_database()
-    responses = db.get_collection("responses")
+    response_content = response.content
     
     response_doc = {
         "system_message": prompt.system_message,
         "user_message": prompt.user_message,
-        "response": response,
-        "response_metadata": {
-            "model": "llama3.1",
-            "created_at": "2025-03-24T11:55:45.6765047Z",
-            "done": True,
-            "done_reason": "stop",
-            "total_duration": 1494413400,
-            "load_duration": 23515300,
-            "prompt_eval_count": 25,
-            "prompt_eval_duration": 3613800,
-            "eval_count": 56,
-            "eval_duration": 1465920900,
-            "message": {
-                "role": "assistant",
-                "content": "",
-                "images": None,
-                "tool_calls": None
-            }
-        },
-        "type": "ai",
-        "name": None,
-        "id": "run-8123189f-e685-4e2e-af60-505fa7a2aed6-0",
-        "example": False,
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-            "input_tokens": 25,
-            "output_tokens": 56,
-            "total_tokens": 81
-        }
+        "response": response_content
     }
+    
+    # Insert the prompt messages and response into the "responses" collection
+    db = get_database()
+    responses = db.get_collection("responses")
+
     
     result = responses.insert_one(response_doc)
     print(f"Inserted response document with ID: {result.inserted_id}")
