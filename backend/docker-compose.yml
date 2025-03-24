@@ -18,3 +18,21 @@ services:
         ME_CONFIG_MONGODB_ADMINPASSWORD: pass
         ME_CONFIG_MONGODB_URL: mongodb://root:pass@mongo:27017/
         ME_CONFIG_BASICAUTH: false
+      depends_on:
+        - mongo
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+    ports:
+      - 8000:8000
+    environment:
+      MONGO_URI: mongodb://root:pass@mongo:27017/mydb
+    restart: always
+    develop:
+      watch:
+        - path: ./src
+          action: sync
+          target: /app/src
