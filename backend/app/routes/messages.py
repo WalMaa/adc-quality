@@ -1,7 +1,5 @@
 from fastapi import APIRouter
 
-from backend.app.models 
-
 router = APIRouter(prefix="/messages")
 
 # Save a new user message
