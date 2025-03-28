@@ -7,7 +7,6 @@ from langchain_community.document_loaders import CSVLoader
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 from langchain.prompts import PromptTemplate
 import pandas as pd
-import json
 import os
 from langchain_community.document_loaders import DirectoryLoader
 

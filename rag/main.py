@@ -13,26 +13,33 @@ def list_code_files(directory):
         for f in filenames:
             if Path(f).suffix in valid_ext:
                 files.append(os.path.join(root, f))
-    return files
+    return sorted(files)
 
-def select_file(files):
+def select_file_or_action(files):
+    # Add "Quit" option to the file list
+    choices = files + ["⏹️ Quit Program"]
+    
     questions = [
         inquirer.List(
-            "selected_file",
-            message="Select a file to analyze",
-            choices=files,
+            "selection",
+            message="Select a file to analyze or quit",
+            choices=choices,
         )
     ]
     answers = inquirer.prompt(questions)
-    return answers["selected_file"] if answers else None
+    return answers["selection"] if answers else None
 
 def analyze_file(file_path):
-    with open(file_path, "r", encoding="utf-8") as f:
-        code = f.read()
-        print(f"\n🧪 Analyzing {file_path}...\n")
-        result = prompt_llm(code)
-        print("🔍 Result:")
-        print(result)
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            code = f.read()
+            print(f"\n🧪 Analyzing {file_path}...\n")
+            result = prompt_llm(code)
+            print("\n🔍 Result:")
+            print(result)
+            print("\n" + "-" * 60)
+    except Exception as e:
+        print(f"\n❌ Error analyzing file: {e}")
         print("-" * 60)
 
 def main():
@@ -43,19 +50,26 @@ def main():
     args = parser.parse_args()
     available_files = list_code_files(BACKEND_PATH)
 
-    if args.interactive:
-        selected = select_file(available_files)
-    elif args.file:
-        selected = args.file
-    else:
-        print("No file specified. Use --interactive or --file.")
-        return
-
-    if selected not in available_files and not os.path.isfile(selected):
-        print("⚠️ Invalid file selection.")
-        return
-
-    analyze_file(selected)
+    # If a single file is specified, analyze it and then enter interactive mode
+    if args.file:
+        if os.path.isfile(args.file):
+            analyze_file(args.file)
+        else:
+            print(f"⚠️ File not found: {args.file}")
+    
+    # Enter interactive mode (both with --interactive flag or after analyzing a single file)
+    if args.interactive or args.file or not (args.interactive or args.file):
+        while True:
+            selection = select_file_or_action(available_files)
+            
+            if selection == "Quit Program":
+                print("👋 Exiting program. Goodbye!")
+                break
+            
+            if selection in available_files:
+                analyze_file(selection)
+            else:
+                print("⚠️ Invalid selection.")
 
 if __name__ == "__main__":
     main()
