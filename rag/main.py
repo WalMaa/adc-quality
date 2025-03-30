@@ -3,8 +3,16 @@ import inquirer
 import argparse
 from pathlib import Path
 from rag import prompt_llm
+import sys
+import signal
 
 BACKEND_PATH = "../backend"
+
+def signal_handler(sig, frame):
+    print("\n\n👋 Interrupted by user. Exiting program. Goodbye!")
+    sys.exit(0)
+    
+signal.signal(signal.SIGINT, signal_handler)
 
 def list_code_files(directory):
     valid_ext = {".py"}
@@ -16,18 +24,24 @@ def list_code_files(directory):
     return sorted(files)
 
 def select_file_or_action(files):
-    # Add "Quit" option to the file list
-    choices = files + ["⏹️ Quit Program"]
+    choices = files + ["Quit Program"]
     
-    questions = [
-        inquirer.List(
-            "selection",
-            message="Select a file to analyze or quit",
-            choices=choices,
-        )
-    ]
-    answers = inquirer.prompt(questions)
-    return answers["selection"] if answers else None
+    try:
+        questions = [
+            inquirer.List(
+                "selection",
+                message="Select a file to analyze or quit",
+                choices=choices,
+            )
+        ]
+        answers = inquirer.prompt(questions)
+        return answers["selection"] if answers else None
+    except KeyboardInterrupt:
+        raise KeyboardInterrupt("User interrupted the selection process.")
+    except Exception as e:
+        print(f"⚠️ Error during selection: {e}")
+        return "Quit Program"
+        
 
 def analyze_file(file_path):
     try:
