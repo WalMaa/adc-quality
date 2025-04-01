@@ -17,3 +17,11 @@ pip install -r requirements.txt
 ```bash
 python main.py --interactive
 ```
+
+## Testing
+
+Run tests in the whole project root:
+
+```bash
+pytest rag/tests
+```

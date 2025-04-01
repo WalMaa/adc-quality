@@ -2,7 +2,7 @@ import os
 import inquirer
 import argparse
 from pathlib import Path
-from rag import prompt_llm
+from rag.rag import prompt_llm
 import sys
 import signal
 
@@ -85,5 +85,5 @@ def main():
             else:
                 print("⚠️ Invalid selection.")
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     main()

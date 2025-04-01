@@ -1,3 +1,6 @@
 unstructured
 langchain
 langchain_community
+pytest
+pytest-cov
+pytest-mock
