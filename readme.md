@@ -37,7 +37,7 @@ From www.docker.com/
 2. Clone the repository:
 
 ```bash
-git clone git@github.com:donhamalainen/6GVisible.git
+git clone git@github.com:WalMaa/adc-quality.git
 ```
 
 3. Open the cloned repository and navigate in `backend` folder
