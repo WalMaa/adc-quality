@@ -1,6 +1,6 @@
 from langchain_ollama import ChatOllama
 from langchain.prompts import PromptTemplate
-from src.routes.llms import get_current_selected_llm
+from backend.src.routes.llms import get_current_selected_llm
 
 template = """
 System message: {system_message}

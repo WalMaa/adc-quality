@@ -2,14 +2,14 @@ import logging
 import requests
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from src.llm_implementation import prompt_llm
-from src.models import PromptRequest
-from src.routes.messages import router as messages_router
-from src.routes.llms import router as llms_router, set_selected_llm
-from src.routes.responses import router as responses_router
+from backend.src.llm_implementation import prompt_llm
+from backend.src.models import PromptRequest
+from backend.src.routes.messages import router as messages_router
+from backend.src.routes.llms import router as llms_router, set_selected_llm
+from backend.src.routes.responses import router as responses_router
 from fastapi.middleware.cors import CORSMiddleware
-from src.db import init_db
-from src.db import get_database
+from backend.src.db import init_db
+from backend.src.db import get_database
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
         llms_available = data.get("models", [])
         
         if llms_available:
-            from src.routes.llms import set_selected_llm
+            from backend.src.routes.llms import set_selected_llm
             set_selected_llm(llms_available[0]["name"])
             print(f"Selected LLM on startup: {llms_available[0]['name']}")
         else:

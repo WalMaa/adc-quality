@@ -2,3 +2,6 @@ fastapi[standard]
 pymongo
 langchain_ollama
 langchain
+pytest
+pytest-cov
+pytest-mock
