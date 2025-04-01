@@ -1,6 +1,4 @@
 import pytest
-import os
-from unittest.mock import MagicMock
 from rag import rag as rag_module
 
 
