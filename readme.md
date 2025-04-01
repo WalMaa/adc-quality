@@ -1,13 +1,13 @@
 # 📖 **Table of contents**
     
-# Backend
+## Backend
 - 🧾 Requirements
 - ⚙️ Installation
 - 🚀 Startup
 - 🛠 API
 - 📂 Backend structure
 
-# Frontend
+## Frontend
 - 🧾 Requirements
 - ⚙️ Installation
 - 🚀 Startup
@@ -19,14 +19,14 @@
 
 # Backend:
 
-# 🧾 **Requirements**
+## 🧾 **Requirements**
 
 - Docker
 - Python
 - Pip
 - ollama
 
-# ⚙️ **Installation**
+## ⚙️ **Installation**
 
 1. Install docker if you don't have it.
 
@@ -58,7 +58,7 @@ pip install -r requirements.txt
 ollama pull ollama3.1
 ```
 
-# 🚀 **Startup**
+## 🚀 **Startup**
 
 1. Start the backend in docker
 
@@ -66,7 +66,7 @@ ollama pull ollama3.1
 docker compose up --build --watch --renew-anon-volumes
 ```
 
-# 🛠 **API**
+## 🛠 **API**
 
 📌 APIs endpoint for version 1.0
 
@@ -91,7 +91,7 @@ docker compose up --build --watch --renew-anon-volumes
 | `GET`    | `/`                     | Root endpoint (Hello World)             |
 
 
-# 📂 **Backend structure**
+## 📂 **Backend structure**
 
 /backend/
 │── /app/                       # 🌐 Application-specific routes and logic
@@ -116,12 +116,12 @@ docker compose up --build --watch --renew-anon-volumes
 
 # Frontend
 
-# 🧾 **Requirements**
+## 🧾 **Requirements**
 
 - Node from (https://nodejs.org/en)
 
 
-# ⚙️ **Installation**
+## ⚙️ **Installation**
 
 1. Install dependencies.
 
@@ -129,7 +129,7 @@ docker compose up --build --watch --renew-anon-volumes
 npm install
 ```
 
-# 🚀 **Startup**
+## 🚀 **Startup**
 
 1. Run the app locally
 
@@ -137,7 +137,7 @@ npm install
 npm run dev
 ```
 
-# 📂 **Frontend structure**
+## 📂 **Frontend structure**
 
 /frontend/
 │── .gitignore                  # 🌐 Git ignore rules
