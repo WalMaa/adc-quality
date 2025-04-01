@@ -11,6 +11,7 @@
 - 🧾 Requirements
 - ⚙️ Installation
 - 🚀 Startup
+- 🧪 Testing
 - 📂 Frontend structure
 
 
@@ -137,6 +138,39 @@ npm install
 ```bash
 npm run dev
 ```
+
+## 🧪 Testing
+
+Frontend tests are written using **Vitest** and **React Testing Library**. These tests ensure the reliability of components and user interactions.
+
+### Running Tests
+To run the tests, use the following command:
+
+```bash
+npm test
+```
+
+### Test Files
+The test files are located in the `src/tests/` directory and cover the following components:
+
+- **`App.test.tsx`**: Tests the main application component.
+- **`AppLayout.test.tsx`**: Tests the layout component, including the header and sidebar.
+- **`DropdownMenu.test.tsx`**: Tests the dropdown menu component for rendering and user interactions.
+- **`PromptForm.test.tsx`**: Tests the prompt form component for input handling and form submission.
+- **`ResponsePage.test.tsx`**: Tests the response page for fetching and displaying data.
+- **`Sidebar.test.tsx`**: Tests the sidebar component for rendering links and handling API errors.
+
+Overall test coverage is at the moment over 90%. 
+
+### Mocking and Tools
+- **Mocking**: API calls are mocked using `vi.fn()` to simulate server responses.
+- **User Interaction**: Simulated using `@testing-library/user-event`.
+- **Test Coverage**: To generate a test coverage report, run:
+
+```bash
+npm test -- --coverage
+```
+
 
 ## 📂 **Frontend structure**
 
