@@ -93,6 +93,7 @@ docker compose up --build --watch --renew-anon-volumes
 
 ## 📂 **Backend structure**
 
+```
 /backend/
 │── /app/                       # 🌐 Application-specific routes and logic
 │   ├── /routes/                # 🚀 API routes (e.g., messages, llms, responses)
@@ -110,7 +111,7 @@ docker compose up --build --watch --renew-anon-volumes
 │── Dockerfile                  # 🐳 Dockerfile for building the backend image
 │── requirements.txt            # 📦 Python dependencies
 │── .gitignore                  # 🌐 Git ignore rules
-
+```
 
 
 
@@ -139,6 +140,7 @@ npm run dev
 
 ## 📂 **Frontend structure**
 
+```
 /frontend/
 │── .gitignore                  # 🌐 Git ignore rules
 │── eslint.config.js            # 🔧 ESLint configuration
@@ -161,5 +163,5 @@ npm run dev
 │   │   ├── prompt-form.tsx     # 🌐 Prompt form component
 │   │   ├── SearchComponent.tsx # 🔍 Search bar component
 │   │   ├── sidebar.tsx         # 🌐 Sidebar component
-
+```
 
