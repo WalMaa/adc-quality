@@ -58,7 +58,7 @@ def initialize_qa_chain():
             
             # Split the document into chunks
             print("Splitting documents...")
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100, separator="\n")
+            text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100, separator="\n")
             docs = text_splitter.split_documents(documents=documents)
 
 
@@ -70,7 +70,7 @@ def initialize_qa_chain():
             persisted_vectorstore = FAISS.load_local(faiss_path, embeddings, allow_dangerous_deserialization=True)
 
         # Create a retriever
-        retriever = persisted_vectorstore.as_retriever(search_kwargs={"k": 15})
+        retriever = persisted_vectorstore.as_retriever(search_kwargs={"k": 5})
 
         llm = ChatOllama(model=model_name,
             num_predict=512,
