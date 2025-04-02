@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from src.models import MessageRequest
-from src.db import get_database
+from backend.src.models import MessageRequest
+from backend.src.db import get_database
 from bson import ObjectId
 
 router = APIRouter(prefix="/messages")
