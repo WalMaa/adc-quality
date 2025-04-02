@@ -1,10 +1,11 @@
 import logging
+import requests
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from src.llm_implementation import prompt_llm
 from src.models import PromptRequest
 from src.routes.messages import router as messages_router
-from src.routes.llms import router as llms_router
+from src.routes.llms import router as llms_router, set_selected_llm
 from src.routes.responses import router as responses_router
 from fastapi.middleware.cors import CORSMiddleware
 from src.db import init_db
@@ -15,7 +16,23 @@ async def lifespan(app: FastAPI):
     # Connect to MongoDB
     client, _ = init_db()
     app.mongodb_client = client
-    
+
+    # Fetch available LLMs and set the first one as the selected model
+    try:
+        response = requests.get("http://host.docker.internal:11434/api/tags")
+        response.raise_for_status()
+        data = response.json()
+        llms_available = data.get("models", [])
+        
+        if llms_available:
+            from src.routes.llms import set_selected_llm
+            set_selected_llm(llms_available[0]["name"])
+            print(f"Selected LLM on startup: {llms_available[0]['name']}")
+        else:
+            print("No LLMs available to select on startup.")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to fetch models on startup: {str(e)}")
+
     yield
     
     # Disconnect from MongoDB
@@ -42,7 +59,6 @@ async def root():
 
 @app.post("/prompt")
 async def prompt(prompt: PromptRequest):
-    # Generate the response using the LLM
     response = prompt_llm(prompt.system_message, prompt.user_message)
     
     response_content = response.content
