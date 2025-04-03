@@ -1,10 +1,18 @@
-import os
-import inquirer
-import argparse
+import importlib.util
 from pathlib import Path
-from rag.rag import prompt_llm
 import sys
+import os
+import argparse
+import inquirer
 import signal
+
+rag_path = (Path(__file__).parent / "rag.py").resolve()
+spec = importlib.util.spec_from_file_location("rag_module", rag_path)
+rag_module = importlib.util.module_from_spec(spec)
+sys.modules["rag_module"] = rag_module
+spec.loader.exec_module(rag_module)
+
+prompt_llm = rag_module.prompt_llm
 
 BACKEND_PATH = "../backend"
 

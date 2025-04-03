@@ -1,8 +1,15 @@
-import os
 import sys
-import tempfile
+import importlib.util
+from pathlib import Path
 import pytest
-from rag import main as main_module
+import tempfile
+import os
+
+main_path = Path(__file__).resolve().parents[1] / "main.py"
+spec = importlib.util.spec_from_file_location("main_module", main_path)
+main_module = importlib.util.module_from_spec(spec)
+sys.modules["main_module"] = main_module
+spec.loader.exec_module(main_module)
 
 
 @pytest.fixture
