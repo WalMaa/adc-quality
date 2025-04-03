@@ -91,6 +91,35 @@ docker compose up --build --watch --renew-anon-volumes
 | `POST`   | `/prompt`               | Send a prompt to the LLM and save result|
 | `GET`    | `/`                     | Root endpoint (Hello World)             |
 
+## 🧪 Testing
+
+Backend tests for the FastAPI application are written using **pytest**. These tests ensure the stability and reliability of various components, such as database connections, API routes, and core application logic.
+
+### Running Tests
+To run the tests, use the following command in the project root:
+
+```bash
+pytest backend/src/tests
+```
+
+### Test Files
+The test files are located in the `backend/src/tests/` directory and cover the following components:
+
+- **`test_main.py`**: Tests the main FastAPI application, including root and prompt endpoints.
+- **`test_db.py`**: Tests the database connection, collection creation, and MongoDB interaction.
+- **`test_llms.py`**: Tests the integration with LLMs (Large Language Models), including model selection and initialization.
+- **`test_messages.py`**: Tests the messages API routes for saving, retrieving, and deleting messages.
+- **`test_responses.py`**: Tests the responses API routes for managing response data.
+- **`test_repository.py`**: Tests that the `init_db()` function correctly initializes the MongoDB client, database, and collections.
+- **`test_llm_implementation.py`**: Tests the core LLM functionality, including the interaction with external services and prompt handling.
+
+Overall test coverage is **`100%`**.
+
+### Mocking and Tools
+- **Mocking**: External dependencies, such as MongoDB client connections, API calls, and LLM models, are mocked using `unittest.mock.patch` and `MagicMock` to simulate interactions without making actual network requests or database changes.
+- **Database Mocking**: MongoDB operations like inserting and retrieving documents are mocked to simulate database interactions, ensuring tests can be run without requiring an actual database.
+- **Test Coverage**: Coverage report is generated when running the tests.
+
 
 ## 📂 **Backend structure**
 
@@ -198,4 +227,3 @@ npm test -- --coverage
 │   │   ├── SearchComponent.tsx # 🔍 Search bar component
 │   │   ├── sidebar.tsx         # 🌐 Sidebar component
 ```
-
