@@ -57,7 +57,7 @@ def initialize_qa_chain():
         else:
             # Load the dataset using LangChain's DirectoryLoader
             print(f"Loading documents from {DATASET_PATH}...")
-            loader = DirectoryLoader(DATASET_PATH, glob="**/*.py")
+            loader = DirectoryLoader(DATASET_PATH, glob=["**/*.java", "**/*.py", "**/*.js", "**/*.ts"])
             documents = loader.load()
             
             # Split the document into chunks

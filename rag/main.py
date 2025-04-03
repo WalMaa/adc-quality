@@ -18,7 +18,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 def list_code_files(directory):
-    valid_ext = {".py"}
+    valid_ext = {".py", ".js", ".ts", ".java"}
     files = []
     for root, _, filenames in os.walk(directory):
         for f in filenames:
