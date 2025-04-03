@@ -1,6 +1,16 @@
+import sys
+import importlib.util
+from pathlib import Path
 from fastapi import APIRouter, HTTPException
-from backend.src.db import get_database
 from bson import ObjectId
+
+db_path = Path(__file__).resolve().parents[2] / "src" / "db.py"
+spec_db = importlib.util.spec_from_file_location("db_module", db_path)
+db_module = importlib.util.module_from_spec(spec_db)
+sys.modules["db_module"] = db_module
+spec_db.loader.exec_module(db_module)
+
+get_database = db_module.get_database
 
 router = APIRouter(prefix="/responses")
 

@@ -1,12 +1,20 @@
-import pytest
+import sys
+import importlib.util
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from bson import ObjectId
-from backend.src.routes import messages
+import pytest
+
+messages_path = Path(__file__).resolve().parents[2] / "src" / "routes" / "messages.py"
+spec = importlib.util.spec_from_file_location("messages_module", messages_path)
+messages_module = importlib.util.module_from_spec(spec)
+sys.modules["messages_module"] = messages_module
+spec.loader.exec_module(messages_module)
 
 app = FastAPI()
-app.include_router(messages.router)
+app.include_router(messages_module.router)
 client = TestClient(app)
 
 FAKE_ID = str(ObjectId())
@@ -14,7 +22,10 @@ FAKE_ID = str(ObjectId())
 
 @pytest.fixture
 def mock_db():
-    with patch("backend.src.routes.messages.get_database") as mock_get_db:
+    """
+    Fixture to patch get_database and return a mocked DB instance.
+    """
+    with patch("messages_module.get_database") as mock_get_db:
         mock_db = MagicMock()
         mock_get_db.return_value = mock_db
         yield mock_db
@@ -163,4 +174,3 @@ def test_delete_system_message_not_found(mock_db):
     response = client.delete(f"/messages/system/{FAKE_ID}")
     assert response.status_code == 200
     assert response.json() == {"error": "System message not found"}
-    

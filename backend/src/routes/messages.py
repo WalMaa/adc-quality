@@ -1,7 +1,23 @@
+import sys
+import importlib.util
+from pathlib import Path
 from fastapi import APIRouter
-from backend.src.models import MessageRequest
-from backend.src.db import get_database
 from bson import ObjectId
+
+models_path = Path(__file__).resolve().parents[2] / "src" / "models.py"
+spec_models = importlib.util.spec_from_file_location("models_module", models_path)
+models_module = importlib.util.module_from_spec(spec_models)
+sys.modules["models_module"] = models_module
+spec_models.loader.exec_module(models_module)
+
+db_path = Path(__file__).resolve().parents[2] / "src" / "db.py"
+spec_db = importlib.util.spec_from_file_location("db_module", db_path)
+db_module = importlib.util.module_from_spec(spec_db)
+sys.modules["db_module"] = db_module
+spec_db.loader.exec_module(db_module)
+
+MessageRequest = models_module.MessageRequest
+get_database = db_module.get_database
 
 router = APIRouter(prefix="/messages")
 

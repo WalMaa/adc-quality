@@ -1,16 +1,23 @@
+import sys
+from pathlib import Path
+
+current_dir = Path(__file__).resolve()
+backend_src = current_dir.parent
+if str(backend_src) not in sys.path:
+    sys.path.insert(0, str(backend_src)) # pragma: no cover
+
 import logging
 import requests
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from backend.src.llm_implementation import prompt_llm
-from backend.src.models import PromptRequest
-from backend.src.routes.messages import router as messages_router
-from backend.src.routes.llms import router as llms_router, set_selected_llm
-from backend.src.routes.responses import router as responses_router
+from llm_implementation import prompt_llm
+from models import PromptRequest
+from routes.messages import router as messages_router
+from routes.llms import router as llms_router, set_selected_llm
+from routes.responses import router as responses_router
 from fastapi.middleware.cors import CORSMiddleware
-from backend.src.db import init_db
-from backend.src.db import get_database
-from backend.src import repository
+from db import init_db, get_database
+import repository
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

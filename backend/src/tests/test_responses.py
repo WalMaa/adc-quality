@@ -1,12 +1,20 @@
+import sys
+import importlib.util
+from pathlib import Path
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from bson import ObjectId
-from backend.src.routes import responses
+
+responses_path = Path(__file__).resolve().parents[2] / "src" / "routes" / "responses.py"
+spec = importlib.util.spec_from_file_location("responses_module", responses_path)
+responses_module = importlib.util.module_from_spec(spec)
+sys.modules["responses_module"] = responses_module
+spec.loader.exec_module(responses_module)
 
 app = FastAPI()
-app.include_router(responses.router)
+app.include_router(responses_module.router)
 client = TestClient(app)
 
 FAKE_ID = str(ObjectId())
@@ -14,7 +22,10 @@ FAKE_ID = str(ObjectId())
 
 @pytest.fixture
 def mock_db():
-    with patch("backend.src.routes.responses.get_database") as mock_get_db:
+    """
+    Fixture to patch get_database and yield a mock DB.
+    """
+    with patch("responses_module.get_database") as mock_get_db:
         mock_db = MagicMock()
         mock_get_db.return_value = mock_db
         yield mock_db

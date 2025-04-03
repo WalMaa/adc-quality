@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 import os
 
-# Dynamically import rag.py from rag/ directory
 rag_path = Path(__file__).resolve().parents[1] / "rag.py"
 spec = importlib.util.spec_from_file_location("rag_module", rag_path)
 rag_module = importlib.util.module_from_spec(spec)

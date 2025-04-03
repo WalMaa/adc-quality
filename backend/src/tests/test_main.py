@@ -1,10 +1,19 @@
+import sys
+import importlib.util
+from pathlib import Path
+from bson import ObjectId
+from unittest.mock import patch, MagicMock
 import requests
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-from bson import ObjectId
-from backend.src import main
 
-client = TestClient(main.app)
+# Dynamically load the main module
+main_path = Path(__file__).resolve().parents[2] / "src" / "main.py"
+spec = importlib.util.spec_from_file_location("main_module", main_path)
+main_module = importlib.util.module_from_spec(spec)
+sys.modules["main_module"] = main_module
+spec.loader.exec_module(main_module)
+
+client = TestClient(main_module.app)
 FAKE_ID = str(ObjectId())
 
 
@@ -17,8 +26,8 @@ def test_root_returns_hello_world():
     assert response.json() == {"message": "Hello World"}
 
 
-@patch("backend.src.main.prompt_llm")
-@patch("backend.src.main.get_database")
+@patch("main_module.prompt_llm")
+@patch("main_module.get_database")
 def test_prompt_endpoint_success(mock_get_db, mock_prompt_llm):
     """
     Test that the prompt endpoint calls the LLM and stores the result in MongoDB.
@@ -52,14 +61,12 @@ def test_prompt_endpoint_success(mock_get_db, mock_prompt_llm):
 
 
 @patch("backend.src.routes.llms.set_selected_llm")
-@patch("backend.src.main.requests.get")
-@patch("backend.src.main.init_db")
+@patch("main_module.requests.get")
+@patch("main_module.init_db")
 def test_lifespan_startup_logic(mock_init_db, mock_requests_get, mock_set_llm):
     """
     Test that the FastAPI lifespan event initializes MongoDB and selects the first LLM.
     """
-    from backend.src.main import app
-
     mock_client = MagicMock()
     mock_init_db.return_value = (mock_client, MagicMock())
 
@@ -70,7 +77,7 @@ def test_lifespan_startup_logic(mock_init_db, mock_requests_get, mock_set_llm):
     }
     mock_requests_get.return_value = mock_response
 
-    with TestClient(app) as client:
+    with TestClient(main_module.app) as client:
         response = client.get("/")
         assert response.status_code == 200
 
@@ -81,14 +88,12 @@ def test_lifespan_startup_logic(mock_init_db, mock_requests_get, mock_set_llm):
 
 
 @patch("backend.src.routes.llms.set_selected_llm")
-@patch("backend.src.main.requests.get")
-@patch("backend.src.main.init_db")
+@patch("main_module.requests.get")
+@patch("main_module.init_db")
 def test_lifespan_no_llms(mock_init_db, mock_requests_get, mock_set_llm):
     """
     Test that the lifespan prints a message when no LLMs are available.
     """
-    from backend.src.main import app
-
     mock_client = MagicMock()
     mock_init_db.return_value = (mock_client, MagicMock())
 
@@ -97,7 +102,7 @@ def test_lifespan_no_llms(mock_init_db, mock_requests_get, mock_set_llm):
     mock_response.json.return_value = {"models": []}
     mock_requests_get.return_value = mock_response
 
-    with TestClient(app) as client:
+    with TestClient(main_module.app) as client:
         response = client.get("/")
         assert response.status_code == 200
 
@@ -106,18 +111,16 @@ def test_lifespan_no_llms(mock_init_db, mock_requests_get, mock_set_llm):
 
 
 @patch("backend.src.routes.llms.set_selected_llm")
-@patch("backend.src.main.requests.get", side_effect=requests.exceptions.RequestException("API failure"))
-@patch("backend.src.main.init_db")
+@patch("main_module.requests.get", side_effect=requests.exceptions.RequestException("API failure"))
+@patch("main_module.init_db")
 def test_lifespan_llm_fetch_failure(mock_init_db, mock_requests_get, mock_set_llm):
     """
     Test that the lifespan handles LLM fetch failure gracefully.
     """
-    from backend.src.main import app
-
     mock_client = MagicMock()
     mock_init_db.return_value = (mock_client, MagicMock())
 
-    with TestClient(app) as client:
+    with TestClient(main_module.app) as client:
         response = client.get("/")
         assert response.status_code == 200
 
