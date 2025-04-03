@@ -2,3 +2,4 @@ __pycache__
 *.pyc
 faiss_index_
 .env
+.scannerwork
