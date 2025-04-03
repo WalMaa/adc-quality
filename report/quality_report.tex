@@ -6,6 +6,7 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{float}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -35,7 +36,7 @@
 
 \begin{document}
 
-\title{Quality Report}
+\title{Quality Assignment Report}
 \subtitle{\\[0.5cm] Advanced Software Quality and Security 2025 \\ Software Quality \\ Instructor: Dr. Matteo Esposito \\ University of Oulu}
 
 \author{Walter Määttä}
@@ -89,7 +90,21 @@ Our quality assessment covers multiple dimensions, including architectural desig
 Our quality assessment methodology incorporated multiple complementary approaches to gain a comprehensive understanding of the system's quality attributes:
 
 \subsection{Architectural Analysis}
-We examined the system's architecture through UML diagrams representing both frontend and backend components. The analysis focused on identifying key components, their interactions, and potential architectural weaknesses such as tight coupling, insufficient abstraction, and scalability limitations.
+We examined the system's architecture through UML diagrams representing both backend and frontend components (see Figures \ref{fig:figure1} and \ref{fig:figure2}). The analysis focused on identifying key components, their interactions, and potential architectural weaknesses such as tight coupling, insufficient abstraction, and scalability limitations.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{BackUML.jpg}
+    \caption{Backend UML Diagram}
+    \label{fig:figure1}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{FrontUML.jpg}
+    \caption{Frontend UML Diagram}
+    \label{fig:figure2}
+\end{figure}
 
 \subsection{Test Planning and Documentation}
 We developed a test plan covering various aspects of the system, including API routes, database connections, LLM integration, and error handling. The test plan included unit tests, integration tests, performance tests, and robustness tests, with detailed test cases and expected outcomes.
@@ -176,29 +191,71 @@ You can find the analysis results from 20 different classes of the Apache Kafka 
 
 \section{A comparative summary of insights from SonarQube, CodeScene, and the LLM}
 \subsection{Critical Security Vulnerabilities}
-The first security weakness revealed by the analysis is the running of the privileged containers (docker-S6471). As can be seen from Image 1, the "python" Docker is running with the default "root" privileges. The default configuration is risky because the containers can be vulnerable to break-out attacks, thus compromising the host system. When processes run with root privileges, the processes run with full access across the container, meaning any vulnerability exploited from the application would result in the elevation of root privileges. The security scan tools rate this weakness as medium priority. To mitigate this weakness, the creation of a specific user with limited privileges in the Dockerfile would greatly minimize the possible attack surface. This practice aligns with broadly accepted security best practices since it follows the principle of least privilege in container configuration. Additionally, when applications are deployed on orchestration platforms like Kubernetes, the use of appropriate security context configurations would provide additional layers of security.
+The first security weakness revealed by the analysis is the running of the privileged containers (docker-S6471). As can be seen from Figure \ref{fig:figure3}, the "python" Docker is running with the default "root" privileges. The default configuration is risky because the containers can be vulnerable to break-out attacks, thus compromising the host system. When processes run with root privileges, the processes run with full access across the container, meaning any vulnerability exploited from the application would result in the elevation of root privileges. The security scan tools rate this weakness as medium priority. To mitigate this weakness, the creation of a specific user with limited privileges in the Dockerfile would greatly minimize the possible attack surface. This practice aligns with broadly accepted security best practices since it follows the principle of least privilege in container configuration. Additionally, when applications are deployed on orchestration platforms like Kubernetes, the use of appropriate security context configurations would provide additional layers of security.
 
-The other serious security issue highlighted is the risky practice of file duplication (docker-S6470). The Dockerfile is a prime example of unnecessary copying of context directories, which can inadvertently leak sensitive information held within the container. Inadvertently, such practices may involve the inclusion of hidden files like .env, .git, or credential files with the final product. API keys, database credentials, or other sensitive information being exposed poses a serious security threat. In addition, the practice leads to the generation of large Docker images with unnecessary content, thus increasing the attack surface. The unparameterized COPY commands used with no exclusions deserve special attention.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Image1.jpg}
+    \caption{Python Docker container running with root privileges.}
+    \label{fig:figure3}
+\end{figure}
+
+The other serious security issue highlighted in Figure \ref{fig:figure4} is the risky practice of file duplication (docker-S6470). The Dockerfile is a prime example of unnecessary copying of context directories, which can inadvertently leak sensitive information held within the container. Inadvertently, such practices may involve the inclusion of hidden files like .env, .git, or credential files with the final product. API keys, database credentials, or other sensitive information being exposed poses a serious security threat. In addition, the practice leads to the generation of large Docker images with unnecessary content, thus increasing the attack surface. The unparameterized COPY commands used with no exclusions deserve special attention.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Image2.jpg}
+    \caption{Risky file duplication in Dockerfile.}
+    \label{fig:figure4}
+\end{figure}
 
 The use of a comprehensive .dockerignore file would help mitigate this risk by explicitly excluding sensitive files and directories from the build context. In addition, specifying only the necessary files and directories in COPY directives provides another layer of protection. Finally, multi-stage builds offer another method for reducing the ultimate image size and minimizing the potential exposure of sensitive data. In terms of credential management, the use of a dedicated secrets management solution is best practice.
 
-The third security weakness found is the use of an unencrypted HTTP protocol in the codebase (python-S5332). Even though this issue is ranked with low severity, it is of significant security risk since data transmission in plain text is vulnerable to man-in-the-middle attacks. Authentication credentials transmitted over HTTP are vulnerable to interception, and without encryption mechanisms, the content's integrity cannot be guaranteed. Shifting all external communications to HTTPS would practically eliminate this vulnerability. This change should be complemented with the correct protocols for certificate checks to prevent attacks based on certificates. Configuration arguments, like endpoints, should be managed using environment variables rather than hard-coded values, making deployments easier across varied environments. Further, the usage of TLS/SSL termination for hosted services would go a long way toward making the security framework stronger.
+The third security weakness found is shown in Figure \ref{fig:figure5} the use of an unencrypted HTTP protocol in the codebase (python-S5332). Even though this issue is ranked with low severity, it is of significant security risk since data transmission in plain text is vulnerable to man-in-the-middle attacks. Authentication credentials transmitted over HTTP are vulnerable to interception, and without encryption mechanisms, the content's integrity cannot be guaranteed. Shifting all external communications to HTTPS would practically eliminate this vulnerability. This change should be complemented with the correct protocols for certificate checks to prevent attacks based on certificates. Configuration arguments, like endpoints, should be managed using environment variables rather than hard-coded values, making deployments easier across varied environments. Further, the usage of TLS/SSL termination for hosted services would go a long way toward making the security framework stronger.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Image3.jpg}
+    \caption{Unencrypted HTTP protocol in the codebase.}
+    \label{fig:figure5}
+\end{figure}
 
 \subsection{Code Quality Issues}
-Apart from security issues, the codebase has significant code quality concerns. There is a high degree of code duplication where four functions in the module—get\_user\_message, get\_system\_message, delete\_user\_message, and delete\_system\_message—share a similar pattern. This pattern violates the Don't Repeat Yourself principle, thereby making maintenance harder because of the need to duplicate changes across different functions. The redundancy increases the chances of inconsistency when changes are applied in one place but not in others. Further, having duplicated code reduces readability for incoming developers who are new to the project.
+Apart from security issues, the codebase has significant code quality concerns. Figure \ref{fig:figure6} displays a high degree of code duplication where four functions in the module—get\allowbreak\_user\allowbreak\_message\allowbreak, get\allowbreak\_system\allowbreak\_message\allowbreak, delete\allowbreak\_user\allowbreak\_message\allowbreak, and delete\allowbreak\_system\allowbreak\_message\allowbreak—share a similar pattern. This pattern violates the Don't Repeat Yourself principle, thereby making maintenance harder because of the need to duplicate changes across different functions. The redundancy increases the chances of inconsistency when changes are applied in one place but not in others. Further, having duplicated code reduces readability for incoming developers who are new to the project.
 
-Solving this problem would require factoring common functionalities into root functions with appropriate parameters. Architectural patterns like the Strategy design or the Template Method can provide high-level solutions for avoiding this redundancy. Creating a message service class responsible for handling user and system messages with a common logical mechanism would considerably improve the maintainability of the application and lower the chance of inconsistencies. Additional maintainability issues within the codebase include commented-out code that should be removed entirely, unnecessary type assertions that add complexity without any benefits, components lacking proper read-only specifiers, and accessibility issues regarding form labels. The frontend architecture shows components that are highly coupled, which would benefit from refactoring to make them more maintainable in the long run.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Image7.jpg}
+    \caption{Code duplication in the module.}
+    \label{fig:figure6}
+\end{figure}
+
+Solving this problem would require factoring common functionalities into root functions with appropriate parameters. Architectural patterns like the Strategy design or the Template Method can provide high-level solutions for avoiding this redundancy. Creating a message service class responsible for handling user and system messages with a common logical mechanism would considerably improve the maintainability of the application and lower the chance of inconsistencies. Figures \ref{fig:figure7} and \ref{fig:figure8} demonstrate additional maintainability issues within the codebase include commented-out code that should be removed entirely, unnecessary type assertions that add complexity without any benefits, components lacking proper read-only specifiers, and accessibility issues regarding form labels. The frontend architecture shows components that are highly coupled, which would benefit from refactoring to make them more maintainable in the long run.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Image5.jpg}
+    \caption{Maintainability issues in the codebase.}
+    \label{fig:figure7}
+\end{figure}
 
 The maintainability issues require a systematic solution involving large-scale refactoring. Commented code must be removed entirely rather than being left as useless baggage in the codebase. Addition of proper accessibility features to user interface elements would increase usability and fulfill the requirements of modern web standards. Refactoring the frontend framework would allow for the reduction of coupling between components, thus increasing modularity and testability. Proper documentation for complex parts of the code would help in future maintenance efforts.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Image6.jpg}
+    \caption{Code health overview.}
+    \label{fig:figure8}
+\end{figure}
+
 \subsection{Architectural Assessment}
-The back-end structure is a modular structure with several separate parts, like the entry point for the FastAPI application, the message and response routers for handling requests, the database module for data persistence, the LLM implementation for interaction with the model, and the repository for data. The structure of this design is characterized by many benefits, such as a clear separation of responsibilities across the parts, systematically arranged API endpoints using specialized routers, and a well-defined LLM implementation module for the purpose of handling multiple models.
+The backend structure (see Figure \ref{fig:figure1}) of the system is modular with several separate parts, like the entry point for the FastAPI application, the message and response routers for handling requests, the database module for data persistence, the LLM implementation for interaction with the model, and the repository for data. The structure of this design is characterized by many benefits, such as a clear separation of responsibilities across the parts, systematically arranged API endpoints using specialized routers, and a well-defined LLM implementation module for the purpose of handling multiple models.
 
 However, the design leaves potential weaknesses that require further examination. The message\_router appears to be handling all interactions from users, which could be a bottleneck under high loads. The diagrams don't implement full error handling, thus raising the robustness of the system into question. The documentation doesn't separate the authentication and authorization processes, which could be a security weakness. Several components seem to interact with the database directly, which could result in data inconsistency for data manipulation and breaking of the business logic.
 
 Improvements to this architecture should include implementing a service layer between routers and data access components to centralize business logic and ensure consistency. Comprehensive error handling throughout the application would improve reliability and user experience. Considering the potentially resource-intensive nature of LLM requests, implementing a message queue for asynchronous processing would enhance system scalability. Adding security middleware for authentication and authorization would address the identified security concerns.
 
-The frontend architecture features React components, with App.tsx serving as the main component, and various components specific to form management and response management, in addition to a shared sidebar component. This setup follows the component-based architecture principles according to React best practices, showing an appropriate separation of concerns between form handling and response display. Nevertheless, the frontend architecture exhibits weaknesses that merit attention. Message handling logic appears duplicated across components, suggesting insufficient abstraction. Form components and state management mechanisms show tight coupling, which complicates testing and reduces reusability. Addressing these issues requires implementing a robust state management solution such as Redux or Context API to centralize application state. Extracting duplicate logic into custom hooks would improve reusability while reducing maintenance overhead. Component composition techniques would enhance UI element reuse across the application.
+The frontend architecture (see Figure \ref{fig:figure2}) features React components, with App.tsx serving as the main component, and various components specific to form management and response management, in addition to a shared sidebar component. This setup follows the component-based architecture principles according to React best practices, showing an appropriate separation of concerns between form handling and response display. Nevertheless, the frontend architecture exhibits weaknesses that merit attention. Message handling logic appears duplicated across components, suggesting insufficient abstraction. Form components and state management mechanisms show tight coupling, which complicates testing and reduces reusability. Addressing these issues requires implementing a robust state management solution such as Redux or Context API to centralize application state. Extracting duplicate logic into custom hooks would improve reusability while reducing maintenance overhead. Component composition techniques would enhance UI element reuse across the application.
 
 \subsection{System Health Assessment}
 The system health evaluation results in a medium health rating, showing no critical blockers. There are, however, many high-severity issues, with a large number of medium and low-severity issues. The most common focus is on maintainability, with the potential for the accumulation of technological debt across the code.
