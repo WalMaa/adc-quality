@@ -1,14 +1,6 @@
-import sys
-from pathlib import Path
-
-current_dir = Path(__file__).resolve().parent
-project_root = current_dir
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
 from langchain_ollama import ChatOllama
 from langchain.prompts import PromptTemplate
-from routes.llms import get_current_selected_llm
+from src.routes.llms import get_current_selected_llm
 
 template = """
 System message: {system_message}

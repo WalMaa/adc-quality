@@ -1,77 +1,168 @@
-import sys
-import importlib.util
-from pathlib import Path
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
+from bson import ObjectId
 import pytest
+from src.routes.messages import router
+# from ..routes.messages import router 
 
-llm_path = Path(__file__).resolve().parents[2] / "src" / "llm_implementation.py"
-spec = importlib.util.spec_from_file_location("llm_module", llm_path)
-llm_module = importlib.util.module_from_spec(spec)
-sys.modules["llm_module"] = llm_module
-spec.loader.exec_module(llm_module)
+# Create the FastAPI app and include the messages router
+app = FastAPI()
+app.include_router(router)
+client = TestClient(app)
+
+FAKE_ID = str(ObjectId())  # Fake ObjectId for testing
+
 
 @pytest.fixture
-def mock_get_current_selected_llm_none():
-    with patch("backend.src.llm_implementation.get_current_selected_llm", return_value=None):
-        yield
-
-
-def test_prompt_llm_raises_if_no_model_selected(mock_get_current_selected_llm_none):
+def mock_db():
     """
-    Test that prompt_llm() raises a ValueError if no LLM model is selected.
+    Fixture to patch get_database and return a mocked DB instance.
     """
-    with pytest.raises(ValueError, match="No LLM model selected"):
-        llm_module.prompt_llm("test", "system")
+    with patch("src.routes.messages.get_database") as mock_get_db: 
+        mock_db = MagicMock()
+        mock_get_db.return_value = mock_db
+        yield mock_db
 
 
-@patch("llm_module.get_current_selected_llm")
-@patch("llm_module.ChatOllama")
-def test_prompt_llm_creates_llm_instance_and_invokes(mock_chat_ollama, mock_get_llm):
+def test_save_user_message(mock_db):
     """
-    Test that prompt_llm() creates a ChatOllama instance, formats the prompt,
-    and calls invoke() with the formatted prompt.
+    Test saving a user message successfully.
     """
-    mock_get_llm.return_value = "llama2"
-    mock_llm_instance = MagicMock()
-    mock_llm_instance.model = "llama2"
-    mock_llm_instance.invoke.return_value = "Mock response"
+    mock_collection = MagicMock()
+    mock_db.get_collection.return_value = mock_collection
 
-    mock_chat_ollama.return_value = mock_llm_instance
-
-    response = llm_module.prompt_llm("Hello", "You are helpful")
-
-    assert response == "Mock response"
-    mock_chat_ollama.assert_called_once_with(model="llama2", base_url="http://host.docker.internal:11434")
-    mock_llm_instance.invoke.assert_called_once()
-    assert "Hello" in mock_llm_instance.invoke.call_args[0][0]
-    assert "You are helpful" in mock_llm_instance.invoke.call_args[0][0]
+    response = client.post("/messages/user", json={"message": "Hello!"})
+    assert response.status_code == 200
+    assert response.json() == {"message": "User message saved"}
 
 
-@patch("llm_module.get_current_selected_llm")
-@patch("llm_module.ChatOllama")
-def test_prompt_llm_reuses_llm_instance_if_same_model(mock_chat_ollama, mock_get_llm):
+def test_save_system_message(mock_db):
     """
-    Test that prompt_llm() reuses the existing ChatOllama instance if the model is the same.
+    Test saving a system message successfully.
     """
-    llm_module.llm = None
+    mock_collection = MagicMock()
+    mock_collection.insert_one.return_value.inserted_id = FAKE_ID
+    mock_db.get_collection.return_value = mock_collection
 
-    mock_get_llm.return_value = "llama2"
+    response = client.post("/messages/system", json={"message": "System log"})
+    assert response.status_code == 200
+    assert response.json() == {"message": "System message saved"}
 
-    mock_llm_instance = MagicMock()
-    mock_llm_instance.model = "llama2"
-    mock_llm_instance.invoke.return_value = "First call response"
-    mock_chat_ollama.return_value = mock_llm_instance
 
-    # First call — should create a new instance
-    llm_module.prompt_llm("First", "System")
+def test_list_user_messages(mock_db):
+    """
+    Test listing user messages with mocked documents.
+    """
+    mock_cursor = [{"_id": ObjectId(), "message": "User 1"}]
+    mock_db.get_collection.return_value.find.return_value = mock_cursor
 
-    # Second call — should reuse the same instance
-    mock_llm_instance.invoke.return_value = "Reused instance response"
-    mock_llm_instance.invoke.reset_mock()
-    mock_chat_ollama.reset_mock()
+    response = client.get("/messages/user")
+    assert response.status_code == 200
+    assert response.json() == [{"_id": str(doc["_id"]), "message": doc["message"]} for doc in mock_cursor]
 
-    response = llm_module.prompt_llm("Second", "System")
 
-    assert response == "Reused instance response"
-    mock_chat_ollama.assert_not_called()
-    mock_llm_instance.invoke.assert_called_once()
+def test_list_system_messages(mock_db):
+    """
+    Test listing system messages with mocked documents.
+    """
+    mock_cursor = [{"_id": ObjectId(), "message": "System 1"}]
+    mock_db.get_collection.return_value.find.return_value = mock_cursor
+
+    response = client.get("/messages/system")
+    assert response.status_code == 200
+    assert response.json() == [{"_id": str(doc["_id"]), "message": doc["message"]} for doc in mock_cursor]
+
+
+def test_get_user_message_found(mock_db):
+    """
+    Test retrieving an existing user message.
+    """
+    mock_message = {"_id": ObjectId(FAKE_ID), "message": "Hello again"}
+    mock_db.get_collection.return_value.find_one.return_value = mock_message
+
+    response = client.get(f"/messages/user/{FAKE_ID}")
+    assert response.status_code == 200
+    assert response.json() == {"_id": str(mock_message["_id"]), "message": mock_message["message"]}
+
+
+def test_get_user_message_not_found(mock_db):
+    """
+    Test retrieving a user message that does not exist.
+    """
+    mock_db.get_collection.return_value.find_one.return_value = None
+
+    response = client.get(f"/messages/user/{FAKE_ID}")
+    assert response.status_code == 404
+    assert response.json() == {"error": "User message not found"}
+
+
+def test_delete_user_message_success(mock_db):
+    """
+    Test deleting a user message successfully.
+    """
+    mock_result = MagicMock(deleted_count=1)
+    mock_db.get_collection.return_value.delete_one.return_value = mock_result
+
+    response = client.delete(f"/messages/user/{FAKE_ID}")
+    assert response.status_code == 200
+    assert response.json() == {"message": f"User message {FAKE_ID} deleted"}
+
+
+def test_delete_user_message_not_found(mock_db):
+    """
+    Test deleting a user message that does not exist.
+    """
+    mock_result = MagicMock(deleted_count=0)
+    mock_db.get_collection.return_value.delete_one.return_value = mock_result
+
+    response = client.delete(f"/messages/user/{FAKE_ID}")
+    assert response.status_code == 404
+    assert response.json() == {"error": "User message not found"}
+
+
+def test_get_system_message_found(mock_db):
+    """
+    Test retrieving an existing system message.
+    """
+    mock_message = {"_id": ObjectId(FAKE_ID), "message": "System log entry"}
+    mock_db.get_collection.return_value.find_one.return_value = mock_message
+
+    response = client.get(f"/messages/system/{FAKE_ID}")
+    assert response.status_code == 200
+    assert response.json() == {"_id": str(mock_message["_id"]), "message": mock_message["message"]}
+
+
+def test_get_system_message_not_found(mock_db):
+    """
+    Test retrieving a system message that does not exist.
+    """
+    mock_db.get_collection.return_value.find_one.return_value = None
+
+    response = client.get(f"/messages/system/{FAKE_ID}")
+    assert response.status_code == 404
+    assert response.json() == {"error": "System message not found"}
+
+
+def test_delete_system_message_success(mock_db):
+    """
+    Test deleting a system message successfully.
+    """
+    mock_result = MagicMock(deleted_count=1)
+    mock_db.get_collection.return_value.delete_one.return_value = mock_result
+
+    response = client.delete(f"/messages/system/{FAKE_ID}")
+    assert response.status_code == 200
+    assert response.json() == {"message": f"System message {FAKE_ID} deleted"}
+
+
+def test_delete_system_message_not_found(mock_db):
+    """
+    Test deleting a system message that does not exist.
+    """
+    mock_result = MagicMock(deleted_count=0)
+    mock_db.get_collection.return_value.delete_one.return_value = mock_result
+
+    response = client.delete(f"/messages/system/{FAKE_ID}")
+    assert response.status_code == 404
+    assert response.json() == {"error": "System message not found"}

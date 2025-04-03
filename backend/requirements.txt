@@ -5,3 +5,4 @@ langchain
 pytest
 pytest-cov
 pytest-mock
+python-dotenv

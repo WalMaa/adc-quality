@@ -1,129 +1,78 @@
+
 import sys
 import importlib.util
 from pathlib import Path
-from bson import ObjectId
 from unittest.mock import patch, MagicMock
-import requests
-from fastapi.testclient import TestClient
+import pytest
 
-# Dynamically load the main module
-main_path = Path(__file__).resolve().parents[2] / "src" / "main.py"
-spec = importlib.util.spec_from_file_location("main_module", main_path)
-main_module = importlib.util.module_from_spec(spec)
-sys.modules["main_module"] = main_module
-spec.loader.exec_module(main_module)
+llm_path = Path(__file__).resolve().parents[2] / "src" / "llm_implementation.py"
+spec = importlib.util.spec_from_file_location("llm_module", llm_path)
+llm_module = importlib.util.module_from_spec(spec)
+sys.modules["llm_module"] = llm_module
+spec.loader.exec_module(llm_module)
 
-client = TestClient(main_module.app)
-FAKE_ID = str(ObjectId())
+@pytest.fixture
+def mock_get_current_selected_llm_none():
+    with patch("backend.src.llm_implementation.get_current_selected_llm", return_value=None):
+        yield
 
 
-def test_root_returns_hello_world():
+def test_prompt_llm_raises_if_no_model_selected(mock_get_current_selected_llm_none):
     """
-    Test that the root endpoint returns the expected message.
+    Test that prompt_llm() raises a ValueError if no LLM model is selected.
     """
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Hello World"}
+    with pytest.raises(ValueError, match="No LLM model selected"):
+        llm_module.prompt_llm("test", "system")
 
 
-@patch("main_module.prompt_llm")
-@patch("main_module.get_database")
-def test_prompt_endpoint_success(mock_get_db, mock_prompt_llm):
+@patch("llm_module.get_current_selected_llm")
+@patch("llm_module.ChatOllama")
+def test_prompt_llm_creates_llm_instance_and_invokes(mock_chat_ollama, mock_get_llm):
     """
-    Test that the prompt endpoint calls the LLM and stores the result in MongoDB.
+    Test that prompt_llm() creates a ChatOllama instance, formats the prompt,
+    and calls invoke() with the formatted prompt.
     """
-    mock_response = MagicMock()
-    mock_response.content = "Mocked response content"
-    mock_prompt_llm.return_value = mock_response
+    mock_get_llm.return_value = "llama2"
+    mock_llm_instance = MagicMock()
+    mock_llm_instance.model = "llama2"
+    mock_llm_instance.invoke.return_value = "Mock response"
 
-    mock_collection = MagicMock()
-    mock_collection.insert_one.return_value.inserted_id = ObjectId(FAKE_ID)
-    mock_get_db.return_value.get_collection.return_value = mock_collection
+    mock_chat_ollama.return_value = mock_llm_instance
 
-    payload = {
-        "system_message": "You are helpful.",
-        "user_message": "Tell me a joke."
-    }
+    response = llm_module.prompt_llm("Hello", "You are helpful")
 
-    response = client.post("/prompt", json=payload)
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["response_id"] == FAKE_ID
-    assert data["response"] == "Mocked response content"
-
-    mock_prompt_llm.assert_called_once_with("You are helpful.", "Tell me a joke.")
-    mock_collection.insert_one.assert_called_once_with({
-        "system_message": "You are helpful.",
-        "user_message": "Tell me a joke.",
-        "response": "Mocked response content"
-    })
+    assert response == "Mock response"
+    mock_chat_ollama.assert_called_once_with(model="llama2", base_url="http://host.docker.internal:11434")
+    mock_llm_instance.invoke.assert_called_once()
+    assert "Hello" in mock_llm_instance.invoke.call_args[0][0]
+    assert "You are helpful" in mock_llm_instance.invoke.call_args[0][0]
 
 
-@patch("backend.src.routes.llms.set_selected_llm")
-@patch("main_module.requests.get")
-@patch("main_module.init_db")
-def test_lifespan_startup_logic(mock_init_db, mock_requests_get, mock_set_llm):
+@patch("llm_module.get_current_selected_llm")
+@patch("llm_module.ChatOllama")
+def test_prompt_llm_reuses_llm_instance_if_same_model(mock_chat_ollama, mock_get_llm):
     """
-    Test that the FastAPI lifespan event initializes MongoDB and selects the first LLM.
+    Test that prompt_llm() reuses the existing ChatOllama instance if the model is the same.
     """
-    mock_client = MagicMock()
-    mock_init_db.return_value = (mock_client, MagicMock())
+    llm_module.llm = None
 
-    mock_response = MagicMock()
-    mock_response.raise_for_status.return_value = None
-    mock_response.json.return_value = {
-        "models": [{"name": "llama2"}]
-    }
-    mock_requests_get.return_value = mock_response
+    mock_get_llm.return_value = "llama2"
 
-    with TestClient(main_module.app) as client:
-        response = client.get("/")
-        assert response.status_code == 200
+    mock_llm_instance = MagicMock()
+    mock_llm_instance.model = "llama2"
+    mock_llm_instance.invoke.return_value = "First call response"
+    mock_chat_ollama.return_value = mock_llm_instance
 
-    mock_init_db.assert_called_once()
-    mock_requests_get.assert_called_once()
-    mock_set_llm.assert_called_once_with("llama2")
-    mock_client.close.assert_called_once()
+    # First call — should create a new instance
+    llm_module.prompt_llm("First", "System")
 
+    # Second call — should reuse the same instance
+    mock_llm_instance.invoke.return_value = "Reused instance response"
+    mock_llm_instance.invoke.reset_mock()
+    mock_chat_ollama.reset_mock()
 
-@patch("backend.src.routes.llms.set_selected_llm")
-@patch("main_module.requests.get")
-@patch("main_module.init_db")
-def test_lifespan_no_llms(mock_init_db, mock_requests_get, mock_set_llm):
-    """
-    Test that the lifespan prints a message when no LLMs are available.
-    """
-    mock_client = MagicMock()
-    mock_init_db.return_value = (mock_client, MagicMock())
+    response = llm_module.prompt_llm("Second", "System")
 
-    mock_response = MagicMock()
-    mock_response.raise_for_status.return_value = None
-    mock_response.json.return_value = {"models": []}
-    mock_requests_get.return_value = mock_response
-
-    with TestClient(main_module.app) as client:
-        response = client.get("/")
-        assert response.status_code == 200
-
-    mock_set_llm.assert_not_called()
-    mock_client.close.assert_called_once()
-
-
-@patch("backend.src.routes.llms.set_selected_llm")
-@patch("main_module.requests.get", side_effect=requests.exceptions.RequestException("API failure"))
-@patch("main_module.init_db")
-def test_lifespan_llm_fetch_failure(mock_init_db, mock_requests_get, mock_set_llm):
-    """
-    Test that the lifespan handles LLM fetch failure gracefully.
-    """
-    mock_client = MagicMock()
-    mock_init_db.return_value = (mock_client, MagicMock())
-
-    with TestClient(main_module.app) as client:
-        response = client.get("/")
-        assert response.status_code == 200
-
-    mock_set_llm.assert_not_called()
-    mock_requests_get.assert_called_once()
-    mock_client.close.assert_called_once()
+    assert response == "Reused instance response"
+    mock_chat_ollama.assert_not_called()
+    mock_llm_instance.invoke.assert_called_once()
