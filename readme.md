@@ -5,6 +5,7 @@
 - ⚙️ Installation
 - 🚀 Startup
 - 🛠 API
+- 🧪 Testing
 - 📂 Backend structure
 
 ## Frontend
@@ -13,9 +14,6 @@
 - 🚀 Startup
 - 🧪 Testing
 - 📂 Frontend structure
-
-
-
 
 
 # Backend:
