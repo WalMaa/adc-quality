@@ -5,8 +5,11 @@ from pathlib import Path
 from rag import prompt_llm
 import sys
 import signal
+from dotenv import load_dotenv
 
-BACKEND_PATH = "../backend"
+load_dotenv()
+
+DATASET_PATH = os.getenv("DATASET_PATH")
 
 def signal_handler(sig, frame):
     print("\n\n👋 Interrupted by user. Exiting program. Goodbye!")
@@ -62,7 +65,7 @@ def main():
     parser.add_argument("--file", help="Specify a single file path directly")
 
     args = parser.parse_args()
-    available_files = list_code_files(BACKEND_PATH)
+    available_files = list_code_files(DATASET_PATH)
 
     # If a single file is specified, analyze it and then enter interactive mode
     if args.file:

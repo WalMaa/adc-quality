@@ -8,6 +8,11 @@ from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 from langchain.prompts import PromptTemplate
 import os
 from langchain_community.document_loaders import DirectoryLoader
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATASET_PATH = os.getenv("DATASET_PATH")
 
 model_name = "llama3.1"
 
@@ -51,9 +56,8 @@ def initialize_qa_chain():
             persisted_vectorstore = FAISS.load_local(faiss_path, embeddings, allow_dangerous_deserialization=True)
         else:
             # Load the dataset using LangChain's DirectoryLoader
-            backend_path = os.path.join(project_root, "backend")
-            print(f"Loading documents from {backend_path}...")
-            loader = DirectoryLoader(backend_path, glob="**/*.py")
+            print(f"Loading documents from {DATASET_PATH}...")
+            loader = DirectoryLoader(DATASET_PATH, glob="**/*.py")
             documents = loader.load()
             
             # Split the document into chunks

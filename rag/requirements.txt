@@ -1,3 +1,4 @@
 unstructured
 langchain
 langchain_community
+python-dotenv
