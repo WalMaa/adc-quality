@@ -1,5 +1,8 @@
 __pycache__
 *.pyc
 faiss_index_
+.idea
+.coverage
 .env
 .scannerwork
+venv

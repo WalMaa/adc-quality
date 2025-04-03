@@ -9,10 +9,18 @@ export type Response = {
 };
 
 const fetchResponses = async () => {
-    const res = await fetch("http://localhost:8000/responses");
-    const body: Response[] = await res.json();
-    console.log(body);
-    return body;
+    try {
+        const res = await fetch("http://localhost:8000/responses");
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const body: Response[] = await res.json();
+        console.log(body);
+        return body;
+    } catch (error) {
+        console.error("Failed to fetch responses:", error);
+        return [];
+    }
 };
 
 export default function Sidebar() {

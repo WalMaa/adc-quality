@@ -1,13 +1,12 @@
-from langchain_ollama import ChatOllama
-from langchain.chains import RetrievalQA
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain.text_splitter import CharacterTextSplitter
-from langchain_community.document_loaders import CSVLoader
-from langchain.output_parsers import StructuredOutputParser, ResponseSchema
-from langchain.prompts import PromptTemplate
 import os
+
+from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
+from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import DirectoryLoader
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import ChatOllama
 from dotenv import load_dotenv
 
 load_dotenv()

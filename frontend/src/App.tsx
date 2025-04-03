@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import PromptForm from "./components/prompt-form";
-import Dropdown from "./components/DropDownMenu";
+import PromptForm from "./components/PromptForm";
+import Dropdown from "./components/DropdownMenu";
 
 interface DropdownOption {
   value: string;

@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import Sidebar from "./sidebar";
+import Sidebar from "./Sidebar";
 
 export default function AppLayout() {
     return (
@@ -8,8 +8,8 @@ export default function AppLayout() {
                 <h1 className="text-2xl font-bold">How can I help?</h1>
             </header>
             <div className="flex h-full w-full">
-                <Sidebar />
-                <main className=" w-full">
+                    <Sidebar />
+                <main className="w-full">
                     <Outlet />
                 </main>
             </div>
