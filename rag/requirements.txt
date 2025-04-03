@@ -4,3 +4,4 @@ langchain_community
 pytest
 pytest-cov
 pytest-mock
+python-dotenv

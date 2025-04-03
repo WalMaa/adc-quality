@@ -5,6 +5,7 @@ import os
 import argparse
 import inquirer
 import signal
+from dotenv import load_dotenv
 
 rag_path = (Path(__file__).parent / "rag.py").resolve()
 spec = importlib.util.spec_from_file_location("rag_module", rag_path)
@@ -15,6 +16,9 @@ spec.loader.exec_module(rag_module)
 prompt_llm = rag_module.prompt_llm
 
 BACKEND_PATH = "../backend"
+load_dotenv()
+
+DATASET_PATH = os.getenv("DATASET_PATH")
 
 def signal_handler(sig, frame):
     print("\n\n👋 Interrupted by user. Exiting program. Goodbye!")
@@ -23,7 +27,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 def list_code_files(directory):
-    valid_ext = {".py"}
+    valid_ext = {".py", ".js", ".ts", ".java"}
     files = []
     for root, _, filenames in os.walk(directory):
         for f in filenames:
@@ -70,7 +74,7 @@ def main():
     parser.add_argument("--file", help="Specify a single file path directly")
 
     args = parser.parse_args()
-    available_files = list_code_files(BACKEND_PATH)
+    available_files = list_code_files(DATASET_PATH)
 
     # If a single file is specified, analyze it and then enter interactive mode
     if args.file:

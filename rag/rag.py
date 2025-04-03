@@ -7,6 +7,11 @@ from langchain_community.document_loaders import DirectoryLoader
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_ollama import ChatOllama
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATASET_PATH = os.getenv("DATASET_PATH")
 
 model_name = "llama3.1"
 
@@ -50,14 +55,13 @@ def initialize_qa_chain():
             persisted_vectorstore = FAISS.load_local(faiss_path, embeddings, allow_dangerous_deserialization=True)
         else:
             # Load the dataset using LangChain's DirectoryLoader
-            backend_path = os.path.join(project_root, "backend")
-            print(f"Loading documents from {backend_path}...")
-            loader = DirectoryLoader(backend_path, glob="**/*.py")
+            print(f"Loading documents from {DATASET_PATH}...")
+            loader = DirectoryLoader(DATASET_PATH, glob=["**/*.java", "**/*.py", "**/*.js", "**/*.ts"])
             documents = loader.load()
             
             # Split the document into chunks
             print("Splitting documents...")
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100, separator="\n")
+            text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100, separator="\n")
             docs = text_splitter.split_documents(documents=documents)
 
 
@@ -69,7 +73,7 @@ def initialize_qa_chain():
             persisted_vectorstore = FAISS.load_local(faiss_path, embeddings, allow_dangerous_deserialization=True)
 
         # Create a retriever
-        retriever = persisted_vectorstore.as_retriever(search_kwargs={"k": 15})
+        retriever = persisted_vectorstore.as_retriever(search_kwargs={"k": 5})
 
         llm = ChatOllama(model=model_name,
             num_predict=512,
